@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
-"""五層記憶 5A+ 基準測試 — 50 輪，含反應速度 & 百分位延遲"""
+"""五層記憶 5A+ 基準測試 — 可調輪次（1-500），含反應速度 & 百分位延遲
 
-import subprocess, time, json, os, csv, sys, statistics
+用法：
+  python3 memory-5a-bench.py          # 預設 50 輪
+  python3 memory-5a-bench.py 100      # 100 輪
+  python3 memory-5a-bench.py 500      # 最大 500 輪
+"""
 
-TOTAL_ROUNDS = 50
+import subprocess, time, json, os, csv, sys, statistics, argparse
+
+parser = argparse.ArgumentParser(description="五層記憶 5A+ 基準測試")
+parser.add_argument("rounds", nargs="?", type=int, default=50,
+                    help="測試輪次 (1-500，預設 50)")
+args = parser.parse_args()
+TOTAL_ROUNDS = max(1, min(500, args.rounds))
 CSV_PATH = "/tmp/memory-5a-bench.csv"
 LOG_PATH = "/tmp/memory-5a-bench.log"
 LCM_DB = os.path.expanduser("~/.openclaw/lcm.db")
