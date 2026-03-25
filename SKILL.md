@@ -183,6 +183,50 @@ Do not waste time trying to salvage a poisoned dataset unless the user explicitl
 
 **Important:** The auth endpoint is `POST /api/v1/auth/login` with `Content-Type: application/x-www-form-urlencoded`. NOT `/api/v1/users/signin`, NOT JSON body.
 
+## Multi-Machine Deployment (多台 Mac Mini 共用)
+
+### User Account 策略
+
+Cognee 有嚴格的多租戶隔離。**切換用戶 = 數據消失**。
+
+| 場景 | 建議 | 原因 |
+|------|------|------|
+| 同一個人的多台機器 | **統一用 `default_user@example.com`** | 所有數據都在這個用戶名下（884 個 lance 文件） |
+| 不同人共用 NAS Cognee | 各建各的用戶（但很少見） | 多租戶隔離 |
+
+### OpenClaw 配置（每台機器的 openclaw.json）
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "cognee": {
+        "config": {
+          "baseUrl": "http://10.10.10.66:8766",
+          "username": "default_user@example.com",
+          "password": "default_password"
+        }
+      }
+    }
+  }
+}
+```
+
+**⚠️ 關鍵規則：**
+- 四台 Mac Mini **必須用同一個賬號**（`default_user@example.com / default_password`）
+- **絕對不要**改成 `admin2@cognee.ai` 或其他賬號——會立刻看不到所有數據
+- 之前踩過的坑：老大曾用 `admin2@cognee.ai`（ID: 95cf83e5），結果搜索全空，因為數據屬於 `default_user`（ID: f5249267）
+- 新機器 onboard 時，直接用 `onboard_cognee_client.sh` 腳本，賬號已內建
+
+### 與 MemOS 的差異
+
+| | MemOS | Cognee |
+|---|---|---|
+| 隔離粒度 | `user_id` 字段（靈活） | 登錄賬號（嚴格） |
+| 切換影響 | 只是搜索過濾不同 | **數據完全不可見** |
+| 建議 | 共用 `scott` | 共用 `default_user@example.com` |
+| 測試隔離 | 用不同 `user_id` | 用不同 `dataset`（不要換賬號） |
+
 ## Common pitfall: user identity mismatch
 
 Cognee has multi-tenant isolation. If you change the username/password in config, the new user cannot see data owned by the old user. See `references/troubleshooting.md` #8 for full diagnosis and fix.
