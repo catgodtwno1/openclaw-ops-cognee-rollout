@@ -323,6 +323,27 @@ $DOCKER cp oc-cognee-api:/app/.venv/lib/python3.12/site-packages/cognee/infrastr
 -v /path/to/LiteLLMEmbeddingEngine_patched.py:/app/.venv/lib/python3.12/site-packages/cognee/infrastructure/databases/vector/embeddings/LiteLLMEmbeddingEngine.py
 ```
 
+## Cognee 壓測腳本
+
+```bash
+# 搜索壓測（預設 100 輪，NAS）
+python3 scripts/cognee_stress_test.py --mode search
+
+# 寫入壓測
+python3 scripts/cognee_stress_test.py --mode add --rounds 50
+
+# 搜索+寫入混合
+python3 scripts/cognee_stress_test.py --mode both --rounds 50
+
+# 指定 URL + 清理
+python3 scripts/cognee_stress_test.py --url http://10.10.10.66:8766 --rounds 100 --cleanup
+```
+
+判定標準：
+- ✅ PASS: search P95 < 5s + 零錯誤 + 衰退 ≤ 2.0x
+- ⚠️ WARN: search P95 < 5s 但衰退 > 2.0x（連接泄漏/telemetry 可能未修）
+- ❌ FAIL: search P95 ≥ 5s 或有錯誤
+
 ## Operational advice
 
 - Prefer `CHUNKS` before fancier graph-style search while stabilizing rollout
